@@ -1,4 +1,12 @@
-/***************************************************************************
+# OpenGL Base Environment for Windows
+A ready to go Visual Studio 2010 solution with both GLEW and GLFW to create an OpenGL Window.
+The purpose of this is to provide a quick starting point for people interested in learning OpenGL, to save
+them the headache of bringing up a modern OpenGL context on Windows.
+
+#Licensing
+This repository includes versions of both GLFW and GLEW, which are available under the terms of their own licenses.
+Code written by me is made available as follows (MIT License):
+
 Copyright (c) 2015 John Dickinson
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,32 +26,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-***************************************************************************/
-
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <cstdio>
-#include <string>
-#include "infrastructure.h"
-
-int main(int argc, char* argv[]){
-	//Create an OpenGL window and set up a context with proper debug output
-	GLFWwindow* window = init(800,600,"OpenGL Window");
-	if(window == nullptr){
-		//initialization failed
-		return -1;
-	}
-	//set the clear color to a nice blue :)
-	glClearColor(0.1f,0.3f,0.6f,1.0f);
-	//Main rendering loop
-	while(!glfwWindowShouldClose(window)){
-		//first poll for events
-		glfwPollEvents();
-		//clear the screen
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-		//finally, update the screen
-		glfwSwapBuffers(window);
-	}
-	return 0;
-}
