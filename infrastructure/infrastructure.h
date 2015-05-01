@@ -1,18 +1,4 @@
-# OpenGL Tutorials in Visual Studio
-A ready to go Visual Studio 2010 solution with GLEW, GLFW, & GLM and some simple OpenGL examples.
-There are many OpenGL tutorials out there already. The purpose of this code base is to provide a quick starting point for people interested in learning OpenGL, and particularly to have a setup that builds and runs out of the box save them the headache of setting up libraries to make a modern OpenGL context on Windows.
-
-## Demos
-### Hello World
-This demo covers everything needed to draw a simple rectangle on the screen in modern OpenGL.
-
-### Model View Projection
-This demo shows off simple usage of the model, view, and projection matrices.
-
-##Licensing
-This repository includes versions of GLFW, GLEW, and GLM, which are available under the terms of their own licenses.
-Code written by me is made available as follows (MIT License):
-
+/***************************************************************************
 Copyright (c) 2015 John Dickinson
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -32,3 +18,21 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+***************************************************************************/
+#pragma once
+#include <string>
+
+void glfwErrorCallback(int error, const char* description);
+void APIENTRY openglErrorCallback(GLenum source,
+						 GLenum type,
+						 GLuint id,
+						 GLenum severity,
+						 GLsizei length,
+						 const GLchar* message,
+						 const void* userParam);
+void onKeyPressed(GLFWwindow* window, int key, int scancode, int action, int modifiers);
+GLFWwindow* init(int windowWidth, int windowHeight, const char* windowTitle);
+std::string readContentsOfFile(std::string filename);
+bool checkCompile(GLuint id);
+bool checkLink(GLuint id);
+void waitForExit(GLFWwindow* window);
