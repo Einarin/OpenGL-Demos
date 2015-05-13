@@ -1,13 +1,35 @@
-# OpenGL Tutorials in Visual Studio
+# OpenGL Demos in Visual Studio
 A ready to go Visual Studio 2010 solution with GLEW, GLFW, & GLM and some simple OpenGL examples.
-There are many OpenGL tutorials out there already. The purpose of this code base is to provide a quick starting point for people interested in learning OpenGL, and particularly to have a setup that builds and runs out of the box save them the headache of setting up libraries to make a modern OpenGL context on Windows.
+There are many OpenGL tutorials out there already. The purpose of this code base
+is to provide a quick starting point for people interested in learning OpenGL,
+and particularly to have a setup that builds and runs out of the box save them
+the headache of setting up libraries to make a modern OpenGL context on Windows.
 
 ## Demos
 ### Hello World
 This demo covers everything needed to draw a simple rectangle on the screen in modern OpenGL.
 
+If anything goes wrong it will display a red image and print errors to the console
+
 ### Model View Projection
 This demo shows off simple usage of the model, view, and projection matrices.
+
+Things to try:
+- render a different shape
+- create an animated shape by making the geometry or matrices change
+
+### Normals & Lighting
+This demo shows the use of basic lighting.
+It uses Lambertian diffuse and Blinn-Phong specular.
+A geometry shader is used to draw the normal vectors and the light vector.
+
+Things to try:
+- change the animation of the cube or light or control them with the mouse
+- render a different shape, observe how the lighting effects it
+- add more lights
+- do something cool with the geometry shader
+- implement a more advanced lighting model, see http://renderwonk.com/publications/s2010-shading-course/
+  for an excellent treatment of physically based shading
 
 ##Licensing
 This repository includes versions of GLFW, GLEW, and GLM, which are available under the terms of their own licenses.

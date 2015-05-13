@@ -32,10 +32,11 @@ THE SOFTWARE.
 /*
 OpenGL Model View Projection
 *************************
-This example draws a yellow rectangle on a blue background.
-If anything goes wrong it will display a red image and print errors to the console
+This demo shows off simple usage of the model, view, and projection matrices.
 
-This time we spin the rectangle around
+Things to try:
+- render a different shape
+- create an animated shape by making the geometry or matrices change
 */
 
 int width = 800;
