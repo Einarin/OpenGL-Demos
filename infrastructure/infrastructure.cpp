@@ -135,20 +135,23 @@ GLFWwindow* init(int windowWidth, int windowHeight, const char* windowTitle){
 	//get the available OpenGL extensions
 	char* extensionsptr = (char *) glGetString(GL_EXTENSIONS);
 	if(extensionsptr){
-		std::string gl_extensions = extensionsptr;
-		//The GL_KHR_debug extension makes handling OpenGL errors much easier
-		//	If glDebugMessageCallback is 0x0 it means GLEW couldn't load the function, so we can't use it
-		if(glDebugMessageCallback != 0x0 && (gl_extensions.find("GL_KHR_debug") != std::string::npos
-				|| gl_extensions.find("GL_ARB_debug_output") != std::string::npos)){
-			glDebugMessageCallback((GLDEBUGPROC)openglErrorCallback,nullptr);
-			glEnable(GL_DEBUG_OUTPUT);
-			glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-		} else {
-			printf("Warning: this OpenGL context doesn't support debug extensions!\n");
-		}
-	} else {
-		printf("Warning: this OpenGL context doesn't support debug extensions!\n");
-	}
+            std::string gl_extensions = extensionsptr;
+            //The GL_KHR_debug extension makes handling OpenGL errors much easier
+            //	If glDebugMessageCallback is 0x0 it means GLEW couldn't load the function, so we can't use it
+            if(glDebugMessageCallback != 0x0 && gl_extensions.find("GL_KHR_debug") != std::string::npos){
+                glDebugMessageCallback((GLDEBUGPROC)openglErrorCallback,nullptr);
+                glEnable(GL_DEBUG_OUTPUT);
+                glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+            } else if(glDebugMessageCallbackARB != 0x0 && gl_extensions.find("GL_ARB_debug_output") != std::string::npos){
+                glDebugMessageCallbackARB((GLDEBUGPROC)openglErrorCallback,nullptr);
+                glEnable(GL_DEBUG_OUTPUT);
+                glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+            } else {
+                printf("Warning: this OpenGL context doesn't support debug extensions!\n");
+            }
+        } else {
+            printf("Warning: this OpenGL context doesn't support debug extensions!\n");
+        }
 	return window;
 }
 
