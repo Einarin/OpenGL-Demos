@@ -137,8 +137,9 @@ GLFWwindow* init(int windowWidth, int windowHeight, const char* windowTitle){
 	if(extensionsptr){
 		std::string gl_extensions = extensionsptr;
 		//The GL_KHR_debug extension makes handling OpenGL errors much easier
-		if(gl_extensions.find("GL_KHR_debug") != std::string::npos
-				|| gl_extensions.find("GL_ARB_debug_output") != std::string::npos){
+		//	If glDebugMessageCallback is 0x0 it means GLEW couldn't load the function, so we can't use it
+		if(glDebugMessageCallback != 0x0 && (gl_extensions.find("GL_KHR_debug") != std::string::npos
+				|| gl_extensions.find("GL_ARB_debug_output") != std::string::npos)){
 			glDebugMessageCallback((GLDEBUGPROC)openglErrorCallback,nullptr);
 			glEnable(GL_DEBUG_OUTPUT);
 			glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
