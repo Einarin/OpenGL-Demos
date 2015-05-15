@@ -31,18 +31,13 @@ THE SOFTWARE.
 #include "geometry.h"
 
 /*
-OpenGL Normals & Lighting
+OpenGL Advanced Lighting
 *************************
-This demo shows the use of basic lighting.
-It uses Lambertian diffuse and Blinn-Phong specular.
-A geometry shader is used to draw the normal vectors and the light vector.
+This demo shows the use of advanced lighting.
+It uses a microfacet BRDF for specular and hacked together diffuse.
+Still a work in progress
 
-Things to try:
-	- change the animation of the cube or light or control them with the mouse
-	- render a different shape, observe how the lighting effects it
-	- add more lights
-	- implement a more advanced lighting model, see http://renderwonk.com/publications/s2010-shading-course/
-	  for an excellent treatment of physically based shading
+based from http://renderwonk.com/publications/s2010-shading-course/
 */
 
 int width = 800;
@@ -96,6 +91,7 @@ int main(int argc, char* argv[]){
 	GLint cameraIndex = glGetUniformLocation(lightingShader->getId(),"cameraWorldPosition");
 	GLint lightIndex = glGetUniformLocation(lightingShader->getId(),"lightPosition");
 	GLint lightColorIndex = glGetUniformLocation(lightingShader->getId(),"lightColor");
+	GLint materialDataIndex = glGetUniformLocation(lightingShader->getId(),"materialData");
 
 	auto normalShader = Shader::Create("mvpNormals.vert","attribColor.frag");
 	if(!normalShader){
@@ -133,15 +129,16 @@ int main(int argc, char* argv[]){
 	bb2.init();
 	
 	//pick some positions for the camera and a light
-	glm::vec3 cameraPosition = glm::vec3(0.f,2.f,4.f);
-	glm::vec3 lightPosition = glm::vec3(1.f,2.f,3.f);
-	glm::vec3 lightColor = glm::vec3(2.f,2.f,3.f); //making the color > 1 makes the light brighter
+	glm::vec3 cameraPosition = glm::vec3(0.f,2.f,3.f);
+	glm::vec3 lightPosition = glm::vec3(0.f,2.f,-2.f);
+	glm::vec3 lightColor = 10.f * glm::vec3(2.f,2.f,2.f); //making the color > 1 makes the light brighter
 
 	//We already set up a perspective projection matrix, now let's make the others
 	//camera is looking toward the origin (0,0,0) with positive Y as up
-	glm::mat4 viewMatrix = glm::lookAt(cameraPosition,glm::vec3(0.f,0.f,0.f),glm::vec3(0.f,1.f,0.f));
+	glm::mat4 viewMatrix = glm::lookAt(cameraPosition,glm::vec3(0.f,2.f,0.f),glm::vec3(0.f,1.f,0.f));
 	//scale object to double it's initial size
-	glm::mat4 modelMatrix = glm::scale(glm::vec3(1.5f));
+	glm::mat4 modelMatrixLeft = glm::translate(0.f,0.f,0.f);
+	glm::mat4 modelMatrixRight = glm::translate(0.f,2.f,-4.f);
 
 	//enable depth test so that the front of the cube will occlude the back of the cube
 	glEnable(GL_DEPTH_TEST);
@@ -154,11 +151,11 @@ int main(int argc, char* argv[]){
 		glfwPollEvents();
 
 		//let's make our cube spin
-		modelMatrix = glm::rotate(modelMatrix,0.5f,glm::vec3(0.f,1.f,0.f));
+		//modelMatrix = glm::rotate(modelMatrix,0.5f,glm::vec3(0.f,1.f,0.f));
 
 		//make the light move up and down
 		int ipos = counter > 400 ? 800-counter : counter;
-		lightPosition.y = float(ipos-200) * 0.01f;
+		lightPosition.x = float(ipos-200) * 0.01f;
 		counter = (counter+1) % 800;
 
 		//clear the screen
@@ -167,17 +164,22 @@ int main(int argc, char* argv[]){
 		lightingShader->bind();
 		glUniformMatrix4fv(projectionMatrixIndex,1,false,glm::value_ptr(projectionMatrix));
 		glUniformMatrix4fv(viewMatrixIndex,1,false,glm::value_ptr(viewMatrix));
-		glUniformMatrix4fv(modelMatrixIndex,1,false,glm::value_ptr(modelMatrix));
+		//glUniformMatrix4fv(modelMatrixIndex,1,false,glm::value_ptr(modelMatrix));
 		glUniform3f(cameraIndex,cameraPosition.x,cameraPosition.y,cameraPosition.z);
 		glUniform3f(lightIndex,lightPosition.x,lightPosition.y,lightPosition.z);
 		glUniform3f(lightColorIndex,lightColor.r,lightColor.g,lightColor.b);
 		//bb.draw();
+		glUniform4f(materialDataIndex,0.972f,0.96f,0.915f,100.f);//rough silver surface
+		glUniformMatrix4fv(modelMatrixIndex,1,false,glm::value_ptr(modelMatrixLeft));
+		bb2.draw();
+		glUniform4f(materialDataIndex,0.04f,0.04f,0.04f,1.0f); //plastic, good enough for dielectrics
+		glUniformMatrix4fv(modelMatrixIndex,1,false,glm::value_ptr(modelMatrixRight));
 		bb2.draw();
 		
 		normalShader->bind();
 		glUniformMatrix4fv(normalProjectionMatrixIndex,1,false,glm::value_ptr(projectionMatrix));
 		glUniformMatrix4fv(normalViewMatrixIndex,1,false,glm::value_ptr(viewMatrix));
-		glUniformMatrix4fv(normalModelMatrixIndex,1,false,glm::value_ptr(modelMatrix));
+		glUniformMatrix4fv(normalModelMatrixIndex,1,false,glm::value_ptr(modelMatrixLeft));
 		glUniform1f(normalLengthIndex,0.5f);
 		glUniform3f(normalLightIndex,lightPosition.x,lightPosition.y,lightPosition.z);
 		//bb.draw();
