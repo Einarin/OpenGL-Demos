@@ -28,8 +28,13 @@ Things to try:
 - render a different shape, observe how the lighting effects it
 - add more lights
 - do something cool with the geometry shader
-- implement a more advanced lighting model, see http://renderwonk.com/publications/s2010-shading-course/
-  for an excellent treatment of physically based shading
+
+### Advanced Lighting
+implements a more advanced lighting model, pulled lots of goodies from:
+- http://renderwonk.com/publications/s2010-shading-course/
+- http://blog.selfshadow.com/publications/s2012-shading-course/
+- http://blog.selfshadow.com/publications/s2014-shading-course/
+- http://advances.realtimerendering.com/
 
 ##Licensing
 This repository includes versions of GLFW, GLEW, and GLM, which are available under the terms of their own licenses.
