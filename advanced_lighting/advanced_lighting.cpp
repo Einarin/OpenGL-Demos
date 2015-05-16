@@ -91,7 +91,9 @@ int main(int argc, char* argv[]){
 	GLint cameraIndex = glGetUniformLocation(lightingShader->getId(),"cameraWorldPosition");
 	GLint lightIndex = glGetUniformLocation(lightingShader->getId(),"lightPosition");
 	GLint lightColorIndex = glGetUniformLocation(lightingShader->getId(),"lightColor");
-	GLint materialDataIndex = glGetUniformLocation(lightingShader->getId(),"materialData");
+	GLint materialColorIndex = glGetUniformLocation(lightingShader->getId(),"materialColor");
+	GLint metalnessIndex = glGetUniformLocation(lightingShader->getId(),"metalness");
+	GLint roughnessIndex = glGetUniformLocation(lightingShader->getId(),"roughness");
 
 	auto normalShader = Shader::Create("mvpNormals.vert","attribColor.frag");
 	if(!normalShader){
@@ -169,10 +171,15 @@ int main(int argc, char* argv[]){
 		glUniform3f(lightIndex,lightPosition.x,lightPosition.y,lightPosition.z);
 		glUniform3f(lightColorIndex,lightColor.r,lightColor.g,lightColor.b);
 		//bb.draw();
-		glUniform4f(materialDataIndex,0.972f,0.96f,0.915f,100.f);//rough silver surface
+		//glUniform3f(materialColorIndex,0.972f,0.96f,0.915f);//silver specular color
+		glUniform3f(materialColorIndex,1.0f,0.766f,0.336f);//gold specular color
+		glUniform1f(metalnessIndex,1.0f);//metal
+		glUniform1f(roughnessIndex,0.f);//rough
 		glUniformMatrix4fv(modelMatrixIndex,1,false,glm::value_ptr(modelMatrixLeft));
 		bb2.draw();
-		glUniform4f(materialDataIndex,0.04f,0.04f,0.04f,1.0f); //plastic, good enough for dielectrics
+		glUniform3f(materialColorIndex,0.14f,0.54f,0.96f); //blue plastic
+		glUniform1f(metalnessIndex,0.f);//not a metal
+		glUniform1f(roughnessIndex,1.f);//smooth
 		glUniformMatrix4fv(modelMatrixIndex,1,false,glm::value_ptr(modelMatrixRight));
 		bb2.draw();
 		

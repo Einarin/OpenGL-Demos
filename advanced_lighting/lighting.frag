@@ -9,7 +9,9 @@ in float vs_LightDistance;
 uniform vec3 lightPosition;
 uniform vec3 lightColor;
 uniform vec3 cameraWorldPosition;
-uniform vec4 materialData;
+uniform vec3 materialColor;
+uniform float roughness;
+uniform float metalness;
 
 out vec4 fragColor;
 
@@ -41,6 +43,13 @@ vec3 fresnelSchlick(vec3 specularRGB, vec3 light, vec3 halfVec){
 float microfacetDistribution(vec3 normal, vec3 halfVec, float roughness){
     return ((roughness + 2)/(2*pi)) * pow(max(dot(normal,halfVec),0.0),roughness);
 }
+float ggxDistribution(vec3 normal, vec3 halfVec, float roughness){
+    float alpha = roughness * roughness;
+    float a2 = alpha * alpha;
+    float dnh = dot(normal,halfVec);
+    float denom = dnh * dnh * (a2 - 1)+1;
+    return a2 / (denom * denom);
+}
 
 // G(1,v,h) chance that a microfacet of the given orientation
 //  is shadowed and/or masked
@@ -60,17 +69,23 @@ float calcRoughness(float maxRough,float roughIn){
     return pow(maxRough,roughIn);
 }
 
-vec3 lighting(vec3 lightDir, vec3 normal, vec3 viewDir, vec3 specularRGB, float roughness){
+vec3 specular(vec3 lightDir, vec3 normal, vec3 viewDir, vec3 specularRGB, float roughness){
     vec3 halfVec = halfVector(lightDir,viewDir);
     float microfacet = microfacetDistribution(normal,halfVec,roughness);
     vec3 fresnel = fresnelSchlick(specularRGB,lightDir,halfVec);
     float geometry = kelemenSzirmayKalosGeometry(lightDir,halfVec);
-    return 0.25 * geometry * microfacet * fresnel * max(dot(normal,lightDir),0.0);
+    return 0.25 * geometry * microfacet * fresnel;
 }
 
 //diffuse
 // punctual light reflection equation
 //  L0(v) = pi*f(lc,v) * lightRadiance(dot(n,lightCenter))
+
+//light falls off with the square of the distance
+float lightFalloff(float lightDistance, float lightRadius){
+    float lightNumerator = min(1 - pow(lightDistance/lightRadius,4),1.0);
+    return (lightNumerator * lightNumerator)/((lightDistance*lightDistance)+1);
+}
 
 void main(void){
     //need to renormalize since components are linearly interpolated separately
@@ -79,17 +94,20 @@ void main(void){
     vec3 lightDirection = normalize(lightdiff);
     float lightDistance = length(lightdiff);
     vec3 eyeDirection = normalize(cameraWorldPosition - vs_WorldPosition);
-    //calculate lambertian diffuse term
-    vec3 diffuse = materialData.rgb * max(dot(lightDirection,normal), 0.0);
-    diffuse = diffuse / materialData.a;
+    //calculate lambertian diffuse term, metals have no diffuse
+    vec3 diffuse = mix(materialColor.rgb,vec3(0.0),metalness);
+    //calculate specular color, 0.004 is a good enough specular for all dielectrics
+    vec3 specColor = mix(vec3(0.04),materialColor.rgb,metalness);
+    float mappedRough = calcRoughness(100000.0,roughness);
+    //diffuse = diffuse / materialData.a;
     //calculate blinn-phong specular term
     //vec3 halfVec = normalize(normal + lightDirection);
     //float specularAngle = max(dot(halfVec,normal),0.0);
     //float specular = pow(specularAngle, 16.0); //constant controls the roughness of the material
-    //light falls off with the square of the distance
-    //float falloff = lightDistance * lightDistance;
+    
+    float falloff = lightFalloff(lightDistance,1000.0);
     //vec3 lighting = lightColor * (specular + diffuse) / falloff;
-    vec3 lighting = lightColor * (diffuse + lighting(lightDirection,normal,eyeDirection,materialData.rgb,materialData.a));
+    vec3 lighting = falloff * lightColor * max(dot(normal,lightDirection),0.0) * (diffuse + specular(lightDirection,normal,eyeDirection,specColor,mappedRough));
     //Use HDR with simple tonmapping
     //This needs to be done after lighting is accumulated,
     //  because light adds linearly in real life
