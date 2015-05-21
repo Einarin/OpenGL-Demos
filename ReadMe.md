@@ -5,6 +5,8 @@ is to provide a quick starting point for people interested in learning OpenGL,
 and particularly to have a setup that builds and runs out of the box save them
 the headache of setting up libraries to make a modern OpenGL context on Windows.
 
+Has also been tested to build and run on Visual Studio Community 2013 after retargetting the projects.
+
 ## Demos
 ### Hello World
 This demo covers everything needed to draw a simple rectangle on the screen in modern OpenGL.
