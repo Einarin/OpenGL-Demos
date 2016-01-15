@@ -108,6 +108,9 @@ void main(void){
     float falloff = lightFalloff(lightDistance,1000.0);
     //vec3 lighting = lightColor * (specular + diffuse) / falloff;
     vec3 lighting = falloff * lightColor * max(dot(normal,lightDirection),0.0) * (diffuse + specular(lightDirection,normal,eyeDirection,specColor,mappedRough));
+    //add some ambient lighting by approximating a light shining straight down
+    vec3 skyDir = vec3(0.0,1.0,0.0);
+    lighting += lightColor * 0.001 * max(dot(normal,skyDir),0.0) * (diffuse + specular(skyDir,skyDir,skyDir,specColor,mappedRough));
     //Use HDR with simple tonmapping
     //This needs to be done after lighting is accumulated,
     //  because light adds linearly in real life

@@ -174,12 +174,12 @@ int main(int argc, char* argv[]){
 		//glUniform3f(materialColorIndex,0.972f,0.96f,0.915f);//silver specular color
 		glUniform3f(materialColorIndex,1.0f,0.766f,0.336f);//gold specular color
 		glUniform1f(metalnessIndex,1.0f);//metal
-		glUniform1f(roughnessIndex,0.f);//rough
+		glUniform1f(roughnessIndex,0.0f);//rough
 		glUniformMatrix4fv(modelMatrixIndex,1,false,glm::value_ptr(modelMatrixLeft));
 		bb2.draw();
 		glUniform3f(materialColorIndex,0.14f,0.54f,0.96f); //blue plastic
 		glUniform1f(metalnessIndex,0.f);//not a metal
-		glUniform1f(roughnessIndex,1.f);//smooth
+		glUniform1f(roughnessIndex,0.25f);//smooth
 		glUniformMatrix4fv(modelMatrixIndex,1,false,glm::value_ptr(modelMatrixRight));
 		bb2.draw();
 		
