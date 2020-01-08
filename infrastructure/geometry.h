@@ -43,7 +43,7 @@ public:
 		T::configureAttributes();
 		glBindVertexArray(0);
 	}
-	void Geometry::draw(){
+	void draw(){
 		glBindVertexArray(vao);
 		glDrawArrays(T::getPrimitiveType(),0,T::getVertexCount());
 		glBindVertexArray(0);
@@ -60,6 +60,7 @@ public:
 	void init(){
 		glGenVertexArrays(1,&vao);
 		glGenBuffers(1,&vbo);
+		glGenBuffers(1, &ibo);
 		glBindVertexArray(vao);
 		glBindBuffer(GL_ARRAY_BUFFER,vbo);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
@@ -73,7 +74,7 @@ public:
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER,ibuffsize,ibuff,GL_STATIC_DRAW);
 		glBindVertexArray(0);
 	}
-	void IndexedGeometry::draw(){
+	void draw(){
 		glBindVertexArray(vao);
 		glDrawElements(T::getPrimitiveType(),T::getElementCount(),T::getIndexType(),0);
 		glBindVertexArray(0);

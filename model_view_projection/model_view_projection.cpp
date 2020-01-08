@@ -28,6 +28,14 @@ THE SOFTWARE.
 #include <string>
 #include "infrastructure.h"
 #include "shader.h"
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+
+void RenderLoopCallback(void* arg) {
+	(*static_cast<std::function<void()>*>(arg))();
+}
+
+#endif
 
 /*
 OpenGL Model View Projection
@@ -68,7 +76,7 @@ int main(int argc, char* argv[]){
 	glClearColor(0.1f,0.3f,0.6f,1.0f);
 
 	//compile our shader
-	auto shader = Shader::Create("mvp.vert","depth.frag");
+	std::shared_ptr<Shader> shader = Shader::Create("mvp.vert","depth.frag");
 	if(!shader){
 		//compiling one of the shaders failed
 		waitForExit(window);
@@ -129,7 +137,7 @@ int main(int argc, char* argv[]){
 	glm::mat4 modelMatrix = glm::scale(glm::vec3(2.f));//scale object to double it's initial size
 
 	//Main rendering loop
-	while(!glfwWindowShouldClose(window)){
+	auto main_loop = [=]() mutable {
 		//first poll for events
 		glfwPollEvents();
 
@@ -149,6 +157,14 @@ int main(int argc, char* argv[]){
 
 		//finally, update the screen
 		glfwSwapBuffers(window);
+	};
+
+#ifdef __EMSCRIPTEN__
+	emscripten_set_main_loop_arg(&RenderLoopCallback, new std::function<void()>(main_loop), -1, false);
+#else
+	while (!glfwWindowShouldClose(window)) {
+		main_loop();
 	}
+#endif
 	return 0;
 }

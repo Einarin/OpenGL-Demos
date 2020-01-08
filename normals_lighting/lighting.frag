@@ -1,4 +1,6 @@
-#version 330 core
+#version 300 es
+
+precision highp float;
 
 in vec3 vs_WorldNormal;
 in vec3 vs_EyeVector;

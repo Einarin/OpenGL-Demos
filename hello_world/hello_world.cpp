@@ -26,6 +26,14 @@ THE SOFTWARE.
 #include <string>
 #include "infrastructure.h"
 #include "shader.h"
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+
+void RenderLoopCallback(void* arg) {
+	(*static_cast<std::function<void()>*>(arg))();
+}
+
+#endif
 
 /*
 OpenGL Hello World
@@ -131,7 +139,7 @@ int main(int argc, char* argv[]){
 	glBindVertexArray(0);
 
 	//All our setup is done, now we can enter our normal draw loop
-	while(!glfwWindowShouldClose(window)){
+	auto main_loop = [=]() {
 		//first poll for events
 		glfwPollEvents();
 		//clear the screen
@@ -139,13 +147,21 @@ int main(int argc, char* argv[]){
 		//tell OpenGL to use the program we made earlier for drawing
 		glUseProgram(shaderProgramId);
 		//use our vertex data declared by the vertex array object for drawing
-		glBindVertexArray(vao); 
+		glBindVertexArray(vao);
 		//Draw!
 		glDrawArrays(GL_TRIANGLE_STRIP, //We're using triangle strips
 			0,  //start with the first vertex
 			4); //draw 4 vertices (all of the ones in our buffer in our case)
 		//finally, update the screen with what we've drawn
 		glfwSwapBuffers(window);
+	};
+
+#ifdef __EMSCRIPTEN__
+	emscripten_set_main_loop_arg(&RenderLoopCallback, new std::function<void()>(main_loop), -1, false);
+#else
+	while(!glfwWindowShouldClose(window)){
+		main_loop();
 	}
+#endif
 	return 0;
 }

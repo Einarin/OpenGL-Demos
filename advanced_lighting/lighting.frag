@@ -1,4 +1,6 @@
-#version 330 core
+#version 300 es
+
+precision highp float;
 
 in vec3 vs_WorldNormal;
 in vec3 vs_EyeVector;
@@ -34,20 +36,20 @@ vec3 halfVector(vec3 light, vec3 normal){
 //Schlick Approximation of Fresnel
 // F(l,h) in Microfacet model
 vec3 fresnelSchlick(vec3 specularRGB, vec3 light, vec3 halfVec){
-    return specularRGB + (1.0-specularRGB)*pow(1.0-dot(light,halfVec),5);
+    return specularRGB + (1.0-specularRGB)*pow(1.0-dot(light,halfVec),5.0);
 }
 
 // D(h) is the microfacet Normal Distribution
 //  generally gaussian-like
 //  uses roughness parameter low roughness means most facets close to n
 float microfacetDistribution(vec3 normal, vec3 halfVec, float roughness){
-    return ((roughness + 2)/(2*pi)) * pow(max(dot(normal,halfVec),0.0),roughness);
+    return ((roughness + 2.0)/(2.0*pi)) * pow(max(dot(normal,halfVec),0.0),roughness);
 }
 float ggxDistribution(vec3 normal, vec3 halfVec, float roughness){
     float alpha = roughness * roughness;
     float a2 = alpha * alpha;
     float dnh = dot(normal,halfVec);
-    float denom = dnh * dnh * (a2 - 1)+1;
+    float denom = dnh * dnh * (a2 - 1.0)+1.0;
     return a2 / (denom * denom);
 }
 
@@ -56,7 +58,7 @@ float ggxDistribution(vec3 normal, vec3 halfVec, float roughness){
 //  usually driven by roughness parameter
 float simpleGeometry(){
 //super simple to start
-    return 1;
+    return 1.0;
 }
 float kelemenSzirmayKalosGeometry(vec3 lightDir,vec3 halfVec){
     float denom = dot(lightDir,halfVec);
@@ -83,8 +85,8 @@ vec3 specular(vec3 lightDir, vec3 normal, vec3 viewDir, vec3 specularRGB, float 
 
 //light falls off with the square of the distance
 float lightFalloff(float lightDistance, float lightRadius){
-    float lightNumerator = min(1 - pow(lightDistance/lightRadius,4),1.0);
-    return (lightNumerator * lightNumerator)/((lightDistance*lightDistance)+1);
+    float lightNumerator = min(1.0 - pow(lightDistance/lightRadius,4.0),1.0);
+    return (lightNumerator * lightNumerator)/((lightDistance*lightDistance)+1.0);
 }
 
 void main(void){

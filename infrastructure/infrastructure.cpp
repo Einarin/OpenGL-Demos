@@ -28,6 +28,12 @@ THE SOFTWARE.
 #include <fstream>
 #include <iostream>
 
+#ifdef __EMSCRIPTEN__
+#include <SDL/SDL_opengl.h>
+#define glDebugMessageCallback glDebugMessageCallbackARB
+#define GLDEBUGPROC GLDEBUGPROCARB
+#endif
+
 void glfwErrorCallback(int error, const char* description){
 	printf("GLFW error %d: %s\n",error,description);
 }
@@ -124,8 +130,10 @@ GLFWwindow* init(int windowWidth, int windowHeight, const char* windowTitle){
 		return nullptr;
 	}
 	printf("Status: Using GLEW %s\n",glewGetString(GLEW_VERSION));
+#ifndef __EMSCRIPTEN__
 	//enable VSYNC so we don't get ugly tearing
 	glfwSwapInterval(1);
+#endif
 	//set up some callbacks for input
 	glfwSetKeyCallback(window,onKeyPressed);
 	//print some info about the OpenGL setup

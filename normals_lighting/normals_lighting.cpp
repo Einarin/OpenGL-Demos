@@ -29,6 +29,14 @@ THE SOFTWARE.
 #include "infrastructure.h"
 #include "shader.h"
 #include "geometry.h"
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+
+void RenderLoopCallback(void* arg) {
+	(*static_cast<std::function<void()>*>(arg))();
+}
+
+#endif
 
 /*
 OpenGL Normals & Lighting
@@ -74,7 +82,7 @@ int main(int argc, char* argv[]){
 	glClearColor(0.1f,0.1f,0.1f,1.0f);
 
 	//compile our shader
-	auto lightingShader = Shader::Create("mvpNormals.vert","lighting.frag");
+	std::shared_ptr<Shader> lightingShader = Shader::Create("mvpNormals.vert","lighting.frag");
 	if(!lightingShader){
 		//compiling one of the shaders failed
 		waitForExit(window);
@@ -97,7 +105,8 @@ int main(int argc, char* argv[]){
 	GLint lightIndex = glGetUniformLocation(lightingShader->getId(),"lightPosition");
 	GLint lightColorIndex = glGetUniformLocation(lightingShader->getId(),"lightColor");
 
-	auto normalShader = Shader::Create("mvpNormals.vert","attribColor.frag");
+#ifndef __EMSCRIPTEN__
+	std::shared_ptr<Shader> normalShader = Shader::Create("mvpNormals.vert","attribColor.frag");
 	if(!normalShader){
 		//compiling one of the shaders failed
 		waitForExit(window);
@@ -126,10 +135,11 @@ int main(int argc, char* argv[]){
 	GLint normalModelMatrixIndex = glGetUniformLocation(normalShader->getId(),"modelMatrix");
 	GLint normalLengthIndex = glGetUniformLocation(normalShader->getId(),"normalLength");
 	GLint normalLightIndex = glGetUniformLocation(normalShader->getId(),"lightPosition");
+#endif
 
-	Geometry<Plane> bb;
+	//Geometry<Plane> bb;
 	IndexedGeometry<SharpCube> bb2;
-	bb.init();
+	//bb.init();
 	bb2.init();
 	
 	//pick some positions for the camera and a light
@@ -149,7 +159,7 @@ int main(int argc, char* argv[]){
 
 	int counter = 0;
 	//Main rendering loop
-	while(!glfwWindowShouldClose(window)){
+	auto main_loop = [=]() mutable {
 		//first poll for events
 		glfwPollEvents();
 
@@ -173,7 +183,7 @@ int main(int argc, char* argv[]){
 		glUniform3f(lightColorIndex,lightColor.r,lightColor.g,lightColor.b);
 		//bb.draw();
 		bb2.draw();
-		
+#ifndef __EMSCRIPTEN__
 		normalShader->bind();
 		glUniformMatrix4fv(normalProjectionMatrixIndex,1,false,glm::value_ptr(projectionMatrix));
 		glUniformMatrix4fv(normalViewMatrixIndex,1,false,glm::value_ptr(viewMatrix));
@@ -182,9 +192,20 @@ int main(int argc, char* argv[]){
 		glUniform3f(normalLightIndex,lightPosition.x,lightPosition.y,lightPosition.z);
 		//bb.draw();
 		bb2.draw();
+#endif
 
 		//finally, update the screen
 		glfwSwapBuffers(window);
+	};
+
+#ifdef __EMSCRIPTEN__
+	emscripten_set_main_loop_arg(&RenderLoopCallback, new std::function<void()>(main_loop), -1, false);
+	onResize(window, width, height); //and call it once to set initial values
+#else
+	onResize(window, width, height); //and call it once to set initial values
+	while (!glfwWindowShouldClose(window)) {
+		main_loop();
 	}
+#endif
 	return 0;
 }

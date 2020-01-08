@@ -29,6 +29,14 @@ THE SOFTWARE.
 #include "infrastructure.h"
 #include "shader.h"
 #include "geometry.h"
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+
+void RenderLoopCallback(void* arg) {
+	(*static_cast<std::function<void()>*>(arg))();
+}
+
+#endif
 
 /*
 OpenGL Advanced Lighting
@@ -56,20 +64,19 @@ void onResize(GLFWwindow* window, int w, int h){
 int main(int argc, char* argv[]){
 	//Create an OpenGL window and set up a context with proper debug output
 	//	This varies based on platform, we use a couple libraries to do it for us
-	GLFWwindow* window = init(800,600,"OpenGL Model View Projection");
+	GLFWwindow* window = init(800,600,"Advanced Lighting");
 	if(window == nullptr){
 		//initialization failed
 		return -1;
 	}
 	//add a callback so we know when the window is resized
-	onResize(window,width,height); //and call it once to set initial values
 	glfwSetFramebufferSizeCallback(window,onResize);
 
 	//set the clear color to ambient
 	glClearColor(0.1f,0.1f,0.1f,1.0f);
 
 	//compile our shader
-	auto lightingShader = Shader::Create("mvpNormals.vert","lighting.frag");
+	std::shared_ptr<Shader> lightingShader = Shader::Create("mvpNormals.vert","lighting.frag");
 	if(!lightingShader){
 		//compiling one of the shaders failed
 		waitForExit(window);
@@ -95,7 +102,8 @@ int main(int argc, char* argv[]){
 	GLint metalnessIndex = glGetUniformLocation(lightingShader->getId(),"metalness");
 	GLint roughnessIndex = glGetUniformLocation(lightingShader->getId(),"roughness");
 
-	auto normalShader = Shader::Create("mvpNormals.vert","attribColor.frag");
+#ifndef __EMSCRIPTEN__
+	std::shared_ptr<Shader> normalShader = Shader::Create("mvpNormals.vert","attribColor.frag");
 	if(!normalShader){
 		//compiling one of the shaders failed
 		waitForExit(window);
@@ -124,7 +132,7 @@ int main(int argc, char* argv[]){
 	GLint normalModelMatrixIndex = glGetUniformLocation(normalShader->getId(),"modelMatrix");
 	GLint normalLengthIndex = glGetUniformLocation(normalShader->getId(),"normalLength");
 	GLint normalLightIndex = glGetUniformLocation(normalShader->getId(),"lightPosition");
-
+#endif
 	Geometry<Plane> bb;
 	IndexedGeometry<SharpCube> bb2;
 	bb.init();
@@ -145,55 +153,66 @@ int main(int argc, char* argv[]){
 	//enable depth test so that the front of the cube will occlude the back of the cube
 	glEnable(GL_DEPTH_TEST);
 
-
 	int counter = 0;
-	//Main rendering loop
-	while(!glfwWindowShouldClose(window)){
+	auto main_loop = [=]() mutable {
 		//first poll for events
 		glfwPollEvents();
 
-		//let's make our cube spin
-		//modelMatrix = glm::rotate(modelMatrix,0.5f,glm::vec3(0.f,1.f,0.f));
+		//let's make our cubes spin
+		modelMatrixLeft = glm::rotate(modelMatrixLeft,0.5f,glm::vec3(0.f,1.f,0.f));
+		modelMatrixRight = glm::rotate(modelMatrixRight, 0.5f, glm::vec3(0.f, -1.f, 0.f));
 
 		//make the light move up and down
-		int ipos = counter > 400 ? 800-counter : counter;
-		lightPosition.x = float(ipos-200) * 0.01f;
-		counter = (counter+1) % 800;
+		int ipos = counter > 400 ? 800 - counter : counter;
+		lightPosition.x = float(ipos - 200) * 0.01f;
+		counter = (counter + 1) % 800;
 
 		//clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		lightingShader->bind();
-		glUniformMatrix4fv(projectionMatrixIndex,1,false,glm::value_ptr(projectionMatrix));
-		glUniformMatrix4fv(viewMatrixIndex,1,false,glm::value_ptr(viewMatrix));
+		glUniformMatrix4fv(projectionMatrixIndex, 1, false, glm::value_ptr(projectionMatrix));
+		glUniformMatrix4fv(viewMatrixIndex, 1, false, glm::value_ptr(viewMatrix));
 		//glUniformMatrix4fv(modelMatrixIndex,1,false,glm::value_ptr(modelMatrix));
-		glUniform3f(cameraIndex,cameraPosition.x,cameraPosition.y,cameraPosition.z);
-		glUniform3f(lightIndex,lightPosition.x,lightPosition.y,lightPosition.z);
-		glUniform3f(lightColorIndex,lightColor.r,lightColor.g,lightColor.b);
+		glUniform3f(cameraIndex, cameraPosition.x, cameraPosition.y, cameraPosition.z);
+		glUniform3f(lightIndex, lightPosition.x, lightPosition.y, lightPosition.z);
+		glUniform3f(lightColorIndex, lightColor.r, lightColor.g, lightColor.b);
 		//bb.draw();
 		//glUniform3f(materialColorIndex,0.972f,0.96f,0.915f);//silver specular color
-		glUniform3f(materialColorIndex,1.0f,0.766f,0.336f);//gold specular color
-		glUniform1f(metalnessIndex,1.0f);//metal
-		glUniform1f(roughnessIndex,0.0f);//rough
-		glUniformMatrix4fv(modelMatrixIndex,1,false,glm::value_ptr(modelMatrixLeft));
+		glUniform3f(materialColorIndex, 1.0f, 0.766f, 0.336f);//gold specular color
+		glUniform1f(metalnessIndex, 1.0f);//metal
+		glUniform1f(roughnessIndex, 0.1f);//rough
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(modelMatrixLeft));
 		bb2.draw();
-		glUniform3f(materialColorIndex,0.14f,0.54f,0.96f); //blue plastic
-		glUniform1f(metalnessIndex,0.f);//not a metal
-		glUniform1f(roughnessIndex,0.25f);//smooth
-		glUniformMatrix4fv(modelMatrixIndex,1,false,glm::value_ptr(modelMatrixRight));
+		glUniform3f(materialColorIndex, 0.14f, 0.54f, 0.96f); //blue plastic
+		glUniform1f(metalnessIndex, 0.f);//not a metal
+		glUniform1f(roughnessIndex, 0.8f);//smooth
+		glUniformMatrix4fv(modelMatrixIndex, 1, false, glm::value_ptr(modelMatrixRight));
 		bb2.draw();
-		
+#ifndef __EMSCRIPTEN__
 		normalShader->bind();
-		glUniformMatrix4fv(normalProjectionMatrixIndex,1,false,glm::value_ptr(projectionMatrix));
-		glUniformMatrix4fv(normalViewMatrixIndex,1,false,glm::value_ptr(viewMatrix));
-		glUniformMatrix4fv(normalModelMatrixIndex,1,false,glm::value_ptr(modelMatrixLeft));
-		glUniform1f(normalLengthIndex,0.5f);
-		glUniform3f(normalLightIndex,lightPosition.x,lightPosition.y,lightPosition.z);
-		//bb.draw();
-		//bb2.draw();
+		glUniformMatrix4fv(normalProjectionMatrixIndex, 1, false, glm::value_ptr(projectionMatrix));
+		glUniformMatrix4fv(normalViewMatrixIndex, 1, false, glm::value_ptr(viewMatrix));
+		glUniformMatrix4fv(normalModelMatrixIndex, 1, false, glm::value_ptr(modelMatrixLeft));
+		glUniform1f(normalLengthIndex, 0.5f);
+		glUniform3f(normalLightIndex, lightPosition.x, lightPosition.y, lightPosition.z);
+#endif
+		bb.draw();
+		bb2.draw();
 
 		//finally, update the screen
 		glfwSwapBuffers(window);
+	};
+
+	//Main rendering loop
+#ifdef __EMSCRIPTEN__
+	emscripten_set_main_loop_arg(&RenderLoopCallback,new std::function<void()>(main_loop), -1, false);
+	onResize(window, width, height); //and call it once to set initial values
+#else
+	onResize(window, width, height); //and call it once to set initial values
+	while(!glfwWindowShouldClose(window)){
+		main_loop();
 	}
+#endif
 	return 0;
 }

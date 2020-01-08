@@ -23,7 +23,7 @@ THE SOFTWARE.
 #include <memory>
 #include <string>
 #include <vector>
-#include <gl\glew.h>
+#include <GL/glew.h>
 
 class ShaderStage {
 private:

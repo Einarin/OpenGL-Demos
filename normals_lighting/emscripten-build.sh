@@ -1,0 +1,1 @@
+ em++ -std=c++14 -I ../infrastructure ../infrastructure/*.cpp normals_lighting.cpp -o normals_lighting.html -lGLEW -s USE_GLFW=3 --preload-file . -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s USE_WEBGL2=1 -g4 --source-map-base http://localhost:6931/
